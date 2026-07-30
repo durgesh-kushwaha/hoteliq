@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.matplotlib_cache/
+.cache/
+.DS_Store
+data/processed/*.csv
+images/*.png
+*.log
