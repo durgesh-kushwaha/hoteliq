@@ -6,11 +6,15 @@ Upload a hotel-booking CSV → auto-clean → explore KPIs & charts → download
 """
 
 import io
+import os
 import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+
+# Path to the bundled sample dataset (relative to this file)
+SAMPLE_CSV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "raw", "hotel_bookings.csv")
 
 # ─────────────────────────── Page Config ───────────────────────────
 st.set_page_config(
@@ -213,23 +217,38 @@ st.caption("Upload your hotel booking CSV → clean, explore, and download the r
 
 # ─────────────────────── Sidebar – Upload ──────────────────────────
 with st.sidebar:
-    st.header("📂 Upload Dataset")
+    st.header("📂 Load Dataset")
+
+    st.markdown("**Option 1 — Try instantly**")
+    use_sample = st.button("📦 Use Sample Dataset", use_container_width=True)
+
+    st.markdown("**Option 2 — Upload your own**")
     uploaded_file = st.file_uploader(
         "Choose a CSV file", type=["csv"], help="Upload any hotel-booking CSV file."
     )
+
     st.markdown("---")
     st.markdown(
         "**Made by Durgesh Kushwaha**  \n"
         "B.Tech – AI & Data Science"
     )
 
-# ─────────────────── Guard: nothing uploaded yet ───────────────────
-if uploaded_file is None:
-    st.info("👈 **Upload a CSV file** from the sidebar to get started.")
+# ──── Decide which data source to use ────
+if use_sample:
+    st.session_state["data_source"] = "sample"
+if uploaded_file is not None:
+    st.session_state["data_source"] = "upload"
+    st.session_state["uploaded_file"] = uploaded_file
+
+data_source = st.session_state.get("data_source")
+
+# ─────────────────── Guard: nothing selected yet ───────────────────
+if data_source is None:
+    st.info("👈 **Upload a CSV file** or click **Use Sample Dataset** to get started.")
     st.markdown(
         """
         ### How it works
-        1. **Upload** your hotel-booking CSV file using the sidebar.
+        1. **Click "Use Sample Dataset"** to explore with the built-in hotel bookings data, **or upload your own CSV**.
         2. The app **automatically cleans** the data (removes duplicates, fixes missing values, etc.).
         3. **Feature engineering** adds useful columns like *revenue*, *stay_length*, *booking_month*, etc.
         4. Explore **KPI cards** and **interactive charts**.
@@ -239,8 +258,18 @@ if uploaded_file is None:
     st.stop()
 
 # ─────────────────────── Load raw data ─────────────────────────────
-raw_df = pd.read_csv(uploaded_file)
-st.success(f"✅ Loaded **{uploaded_file.name}** — {raw_df.shape[0]:,} rows × {raw_df.shape[1]} columns")
+if data_source == "sample":
+    if not os.path.exists(SAMPLE_CSV_PATH):
+        st.error("❌ Sample dataset not found. Please upload a CSV file instead.")
+        st.stop()
+    raw_df = pd.read_csv(SAMPLE_CSV_PATH)
+    source_label = "hotel_bookings.csv (Sample)"
+else:
+    uploaded_file = st.session_state.get("uploaded_file")
+    raw_df = pd.read_csv(uploaded_file)
+    source_label = uploaded_file.name
+
+st.success(f"✅ Loaded **{source_label}** — {raw_df.shape[0]:,} rows × {raw_df.shape[1]} columns")
 
 # ─────────────────────── Data Preview ──────────────────────────────
 with st.expander("🔍 Raw Data Preview", expanded=False):
