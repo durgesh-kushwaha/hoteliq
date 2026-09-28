@@ -5,4 +5,5 @@ __pycache__/
 .cache/
 .DS_Store
 data/processed/*.csv
+images/*.png
 *.log

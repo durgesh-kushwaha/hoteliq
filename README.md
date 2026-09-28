@@ -289,7 +289,17 @@ pip install -r requirements.txt
 
 ---
 
-## 2️⃣ Run Using Python
+## 2️⃣ Run the Streamlit Dashboard (Recommended)
+
+```bash
+streamlit run app.py
+```
+
+Open the URL shown in the terminal (usually http://localhost:8501), upload your CSV, and explore!
+
+---
+
+## 3️⃣ Run Using Python (CLI)
 
 ```bash
 python src/main.py
@@ -297,7 +307,7 @@ python src/main.py
 
 ---
 
-## 3️⃣ Run Using Jupyter Notebook
+## 4️⃣ Run Using Jupyter Notebook
 
 ```bash
 jupyter notebook notebooks/Hotel_Booking_Analysis.ipynb
