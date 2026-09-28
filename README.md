@@ -4,8 +4,11 @@
 ![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-150458?logo=pandas)
 ![NumPy](https://img.shields.io/badge/NumPy-Numerical%20Computing-013243?logo=numpy)
 ![Matplotlib](https://img.shields.io/badge/Matplotlib-Visualization-orange)
+![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?logo=streamlit)
+![Plotly](https://img.shields.io/badge/Plotly-Interactive%20Charts-3F4F75?logo=plotly)
 ![SQL](https://img.shields.io/badge/SQL-Analysis-blue)
 ![Power%20BI](https://img.shields.io/badge/Power%20BI-Dashboard-yellow?logo=powerbi)
+![File Support](https://img.shields.io/badge/Upload-CSV%20%7C%20XLSX%20%7C%20XLS%20%7C%20TSV-green)
 
 ---
 
@@ -39,6 +42,10 @@ The project follows a complete analytics pipeline starting from raw data, perfor
 | Pandas | Data Cleaning & Manipulation |
 | NumPy | Numerical Operations |
 | Matplotlib | Data Visualization |
+| Streamlit | Interactive Web Dashboard |
+| Plotly | Interactive Charts & Graphs |
+| openpyxl | XLSX (Excel) File Support |
+| xlrd | XLS (Legacy Excel) File Support |
 | SQL | Business Query Analysis |
 | Power BI | Dashboard Preparation |
 | Jupyter Notebook | Interactive Analysis |
@@ -50,6 +57,8 @@ The project follows a complete analytics pipeline starting from raw data, perfor
 ```text
 Hotel Booking Analytics/
 
+├── app.py                        ← Streamlit Dashboard (supports CSV, XLSX, XLS, TSV)
+│
 ├── data/
 │   ├── raw/
 │   │   └── hotel_bookings.csv
@@ -295,7 +304,19 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Open the URL shown in the terminal (usually http://localhost:8501), upload your CSV, and explore!
+Open the URL shown in the terminal (usually http://localhost:8501), upload your file, and explore!
+
+**Supported file formats:**
+
+| Format | Extension | Notes |
+|--------|-----------|-------|
+| CSV | `.csv` | Standard comma-separated values |
+| Excel (Modern) | `.xlsx` | Microsoft Excel 2007+ |
+| Excel (Legacy) | `.xls` | Microsoft Excel 97-2003 |
+| TSV | `.tsv` | Tab-separated values |
+| Google Sheets | `.csv` / `.xlsx` | Export via File → Download, then upload |
+
+> 📱 **Mobile friendly** — works on phone browsers too!
 
 ---
 

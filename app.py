@@ -2,7 +2,8 @@
 🏨 Hotel Booking Analytics – Streamlit Dashboard
 Author: Durgesh Kushwaha
 
-Upload a hotel-booking CSV → auto-clean → explore KPIs & charts → download cleaned data.
+Upload a hotel-booking file (CSV, Excel, XLS, XLSX, TSV, Google Sheets export)
+→ auto-clean → explore KPIs & charts → download cleaned data.
 """
 
 import io
@@ -12,6 +13,58 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+
+
+# ─────────────────────────── File Reader ───────────────────────────
+# Supported extensions and their corresponding reader functions.
+SUPPORTED_EXTENSIONS = ["csv", "xlsx", "xls", "tsv"]
+
+
+def read_uploaded_file(uploaded_file) -> pd.DataFrame:
+    """Read an uploaded file into a DataFrame.
+
+    Supports: .csv, .tsv, .xlsx, .xls
+    Google Sheets export: export as .csv or .xlsx and upload.
+    """
+    filename = uploaded_file.name.lower()
+
+    if filename.endswith(".csv"):
+        # Try common encodings that handle phone-generated CSVs
+        for encoding in ("utf-8", "latin-1", "cp1252"):
+            try:
+                uploaded_file.seek(0)
+                return pd.read_csv(uploaded_file, encoding=encoding)
+            except (UnicodeDecodeError, Exception):
+                continue
+        # Last-resort: ignore errors
+        uploaded_file.seek(0)
+        return pd.read_csv(uploaded_file, encoding="utf-8", errors="ignore")
+
+    elif filename.endswith(".tsv") or filename.endswith(".txt"):
+        uploaded_file.seek(0)
+        return pd.read_csv(uploaded_file, sep="\t")
+
+    elif filename.endswith(".xlsx"):
+        uploaded_file.seek(0)
+        return pd.read_excel(uploaded_file, engine="openpyxl")
+
+    elif filename.endswith(".xls"):
+        uploaded_file.seek(0)
+        try:
+            return pd.read_excel(uploaded_file, engine="xlrd")
+        except Exception:
+            # Some .xls files are actually .xlsx; retry with openpyxl
+            uploaded_file.seek(0)
+            return pd.read_excel(uploaded_file, engine="openpyxl")
+
+    else:
+        # Fallback: try CSV first, then Excel
+        try:
+            uploaded_file.seek(0)
+            return pd.read_csv(uploaded_file)
+        except Exception:
+            uploaded_file.seek(0)
+            return pd.read_excel(uploaded_file)
 
 # Path to the bundled sample dataset (relative to this file)
 SAMPLE_CSV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "raw", "hotel_bookings.csv")
@@ -213,7 +266,7 @@ def _room_col(df):
 # ═══════════════════════════════════════════════════════════════════
 
 st.title("🏨 Hotel Booking Analytics")
-st.caption("Upload your hotel booking CSV → clean, explore, and download the results.")
+st.caption("Upload your hotel booking file (CSV, Excel, XLS, Google Sheets export) → clean, explore, and download the results.")
 
 # ─────────────────────── Sidebar – Upload ──────────────────────────
 with st.sidebar:
@@ -224,7 +277,12 @@ with st.sidebar:
 
     st.markdown("**Option 2 — Upload your own**")
     uploaded_file = st.file_uploader(
-        "Choose a CSV file", type=["csv"], help="Upload any hotel-booking CSV file."
+        "Choose a file (CSV, Excel, XLS, TSV)",
+        type=SUPPORTED_EXTENSIONS,
+        help=(
+            "Supports: .csv, .xlsx, .xls, .tsv files.  \n"
+            "**Google Sheets:** File → Download as .csv or .xlsx, then upload here."
+        ),
     )
 
     st.markdown("---")
@@ -244,11 +302,11 @@ data_source = st.session_state.get("data_source")
 
 # ─────────────────── Guard: nothing selected yet ───────────────────
 if data_source is None:
-    st.info("👈 **Upload a CSV file** or click **Use Sample Dataset** to get started.")
+    st.info("👈 **Upload a file** (CSV, Excel, XLS, TSV) or click **Use Sample Dataset** to get started.")
     st.markdown(
         """
         ### How it works
-        1. **Click "Use Sample Dataset"** to explore with the built-in hotel bookings data, **or upload your own CSV**.
+        1. **Click "Use Sample Dataset"** to explore with the built-in hotel bookings data, **or upload your own file** (CSV, XLSX, XLS, TSV, or Google Sheets export).
         2. The app **automatically cleans** the data (removes duplicates, fixes missing values, etc.).
         3. **Feature engineering** adds useful columns like *revenue*, *stay_length*, *booking_month*, etc.
         4. Explore **KPI cards** and **interactive charts**.
@@ -260,13 +318,21 @@ if data_source is None:
 # ─────────────────────── Load raw data ─────────────────────────────
 if data_source == "sample":
     if not os.path.exists(SAMPLE_CSV_PATH):
-        st.error("❌ Sample dataset not found. Please upload a CSV file instead.")
+        st.error("❌ Sample dataset not found. Please upload a file instead.")
         st.stop()
     raw_df = pd.read_csv(SAMPLE_CSV_PATH)
     source_label = "hotel_bookings.csv (Sample)"
 else:
     uploaded_file = st.session_state.get("uploaded_file")
-    raw_df = pd.read_csv(uploaded_file)
+    try:
+        raw_df = read_uploaded_file(uploaded_file)
+    except Exception as e:
+        st.error(
+            f"❌ **Could not read the file.** Please make sure it is a valid "
+            f"CSV, XLSX, XLS, or TSV file.\n\n"
+            f"**Error:** `{e}`"
+        )
+        st.stop()
     source_label = uploaded_file.name
 
 st.success(f"✅ Loaded **{source_label}** — {raw_df.shape[0]:,} rows × {raw_df.shape[1]} columns")
