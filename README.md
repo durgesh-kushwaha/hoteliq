@@ -1,74 +1,116 @@
-# 🏨 Hotel Booking Pricing & Occupancy Analytics
+# 🏨 HotelIQ – Hotel Booking Analytics
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
 ![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-150458?logo=pandas)
 ![NumPy](https://img.shields.io/badge/NumPy-Numerical%20Computing-013243?logo=numpy)
-![Matplotlib](https://img.shields.io/badge/Matplotlib-Visualization-orange)
 ![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?logo=streamlit)
 ![Plotly](https://img.shields.io/badge/Plotly-Interactive%20Charts-3F4F75?logo=plotly)
-![SQL](https://img.shields.io/badge/SQL-Analysis-blue)
-![Power%20BI](https://img.shields.io/badge/Power%20BI-Dashboard-yellow?logo=powerbi)
 ![File Support](https://img.shields.io/badge/Upload-CSV%20%7C%20XLSX%20%7C%20XLS%20%7C%20TSV-green)
 
 ---
 
 ## 📌 Project Overview
 
-This project presents an end-to-end Data Analytics workflow for analyzing hotel booking data. The objective is to extract meaningful business insights related to booking trends, pricing, occupancy, cancellations, customer behavior, and hotel performance.
+**HotelIQ** is an end-to-end Hotel Booking Analytics dashboard built with Streamlit and Plotly. Upload any hotel booking dataset — regardless of column naming conventions — and the app will:
 
-The project follows a complete analytics pipeline starting from raw data, performing cleaning and feature engineering, conducting exploratory data analysis (EDA), generating visualizations, and preparing the cleaned dataset for Power BI dashboard development.
+- **Auto-detect columns** (price, dates, room type, booking status, guest info, etc.)
+- **Deep clean** the data (fix negative prices, strip currency symbols, normalise statuses, cap ratings)
+- **Engineer features** (stay length, revenue, booking month/year/weekday, cancellation flags)
+- **Show rich KPIs & interactive charts**
+- Let you **download the cleaned dataset**
 
----
-
-# 🎯 Objectives
-
-- Load and inspect hotel booking data
-- Clean and preprocess the dataset
-- Perform Feature Engineering
-- Conduct Exploratory Data Analysis (EDA)
-- Generate business-focused visualizations
-- Identify pricing and occupancy trends
-- Analyze cancellation behavior
-- Prepare clean data for Power BI
-- Write SQL queries for analytical reporting
+> 💱 **Default currency is INR (₹)** when no currency is detected in your data.
 
 ---
 
-# 🛠️ Technologies Used
+## 🧠 Smart Column Detection
 
-| Tool | Purpose |
-|-------|----------|
-| Python | Data Analysis |
-| Pandas | Data Cleaning & Manipulation |
-| NumPy | Numerical Operations |
-| Matplotlib | Data Visualization |
-| Streamlit | Interactive Web Dashboard |
-| Plotly | Interactive Charts & Graphs |
-| openpyxl | XLSX (Excel) File Support |
-| xlrd | XLS (Legacy Excel) File Support |
-| SQL | Business Query Analysis |
-| Power BI | Dashboard Preparation |
-| Jupyter Notebook | Interactive Analysis |
+Unlike traditional dashboards that break when column names don't match exactly, HotelIQ uses **fuzzy keyword matching** to find the right columns automatically:
+
+| Role | Keywords Searched |
+|------|------------------|
+| Price | `price_per_night`, `price`, `adr`, `rate`, `cost`, `tariff` |
+| Total Amount | `total_amount`, `total_price`, `total_cost`, `revenue`, `amount` |
+| Check-in Date | `check_in`, `checkin`, `arrival_date` |
+| Check-out Date | `check_out`, `checkout`, `departure` |
+| Room Type | `room_type`, `reserved_room`, `assigned_room` |
+| Booking Status | `booking_status`, `reservation_status`, `status` |
+| Hotel / Property | `hotel`, `property_id`, `property` |
+| Guest Rating | `rating`, `review_score`, `score` |
+| ...and more | Lead time, adults, children, country, meal, etc. |
 
 ---
 
-# 📂 Project Structure
+## 🧹 Data Cleaning (The Main Brain)
+
+The cleaning pipeline handles real-world messy data:
+
+| Problem | Solution |
+|---------|----------|
+| Prices like `$456`, `5122 USD`, `₹3000` | Extracts numeric value, detects currency |
+| Negative prices (`-487`) | Converts to absolute value |
+| `Error`, blank, or invalid price values | Replaced with column median |
+| Inconsistent statuses (`pending`, `PENDING`, `Pending`) | Normalised to Title Case |
+| Guest ratings > 5 or < 1 | Capped to [1, 5] range |
+| Missing dates | Set to NaT (not silently dropped) |
+| Duplicate rows | Removed automatically |
+| Missing text values | Filled with "Unknown" / "Anonymous" |
+
+---
+
+## ⚡ Feature Engineering
+
+| Feature | How It's Calculated |
+|---------|-------------------|
+| `stay_nights` | `checkout - checkin` in days, or `weekend_nights + weekday_nights` |
+| `revenue` | From `total_amount` column, or `price × stay_nights` |
+| `booking_month / year / weekday` | Extracted from check-in date |
+| `is_weekend_booking` | True if check-in falls on Saturday/Sunday |
+| `avg_daily_rate` | Alias of the detected price column |
+| `is_cancelled` | Derived from booking status (if no binary column exists) |
+| `revenue_lost` | Revenue of cancelled bookings |
+
+---
+
+## 📊 Dashboard Sections
+
+### Key Performance Indicators (8 KPI Cards)
+- Total Bookings
+- Total Revenue
+- Average Daily Rate
+- Cancellation Rate
+- Average Stay Length
+- Average Guest Rating
+- Room Types Count
+- Properties / Hotels Count
+
+### Interactive Visualisations
+1. 📅 Monthly Booking Trends
+2. 📋 Booking Status Distribution (pie + bar)
+3. 💰 Revenue by Property / Hotel
+4. 🛏️ Room Type Distribution (pie + bar)
+5. 💵 Price Distribution (histogram + box plot by room type)
+6. 📈 Revenue Over Time
+7. ⭐ Guest Rating Distribution
+8. ❌ Cancellation Analysis
+9. 📆 Advance Booking Days vs Price (scatter)
+10. 🌙 Stay Length Distribution
+11. 👤 Top 10 Guests by Revenue
+
+---
+
+## 📂 Project Structure
 
 ```text
 Hotel Booking Analytics/
-
-├── app.py                        ← Streamlit Dashboard (supports CSV, XLSX, XLS, TSV)
-│
+├── app.py                     ← Streamlit Dashboard (the main brain)
 ├── data/
 │   ├── raw/
 │   │   └── hotel_bookings.csv
-│   │
 │   └── processed/
 │       └── cleaned_hotel_bookings.csv
-│
 ├── notebooks/
 │   └── Hotel_Booking_Analysis.ipynb
-│
 ├── src/
 │   ├── main.py
 │   ├── data_cleaning.py
@@ -76,17 +118,11 @@ Hotel Booking Analytics/
 │   ├── eda.py
 │   ├── visualization.py
 │   └── utils.py
-│
 ├── sql/
 │   └── analysis_queries.sql
-│
 ├── dashboard/
 │   └── power_bi_dashboard_plan.md
-│
 ├── images/
-│
-├── reports/
-│
 ├── README.md
 ├── requirements.txt
 └── .gitignore
@@ -94,219 +130,23 @@ Hotel Booking Analytics/
 
 ---
 
-# ⚙️ Project Workflow
+## 🚀 How to Run
 
-```text
-Raw Dataset
-      │
-      ▼
-Data Inspection
-      │
-      ▼
-Data Cleaning
-      │
-      ▼
-Feature Engineering
-      │
-      ▼
-Exploratory Data Analysis
-      │
-      ▼
-Data Visualization
-      │
-      ▼
-Business Insights
-      │
-      ▼
-Prepared Dataset
-      │
-      ▼
-Power BI Dashboard
-```
-
----
-
-# 📊 Exploratory Data Analysis
-
-The project analyzes several important business questions including:
-
-- Monthly Booking Trends
-- Revenue Analysis
-- Average Daily Rate (ADR)
-- Room Type Distribution
-- Cancellation Analysis
-- Hotel Performance
-- Booking Lead Time
-- Pricing Trends
-
----
-
-# 📈 Generated Visualizations
-
-## Monthly Booking Trends
-
-![Monthly Bookings](images/monthly_bookings.png)
-
----
-
-## Revenue by Hotel
-
-![Revenue by Hotel](images/revenue_by_hotel.png)
-
----
-
-## Room Type Distribution
-
-![Room Type Distribution](images/room_type_distribution.png)
-
----
-
-## Average Daily Rate Distribution
-
-![ADR Distribution](images/average_daily_rate_distribution.png)
-
----
-
-## Average Daily Rate Box Plot
-
-![ADR Boxplot](images/average_daily_rate_boxplot.png)
-
----
-
-## Advance Booking vs Price
-
-![Advance Booking](images/advance_booking_vs_price.png)
-
----
-
-## Cancellation Count
-
-![Cancellation Count](images/cancellation_count.png)
-
----
-
-# 📌 Key Performance Indicators (KPIs)
-
-This project focuses on measuring the following business KPIs:
-
-- 📅 Total Bookings
-- 💰 Total Revenue
-- 🏨 Revenue by Hotel
-- 📈 Monthly Booking Trend
-- 💵 Average Daily Rate (ADR)
-- ❌ Cancellation Count
-- 🛏️ Room Type Distribution
-- 📆 Advance Booking Behaviour
-
----
-
-# ❓ Business Questions Answered
-
-- Which months receive the highest number of bookings?
-- Which hotel generates the highest revenue?
-- Which room type is booked most frequently?
-- How are booking prices distributed?
-- Does booking earlier affect room price?
-- What is the overall cancellation trend?
-- Which hotel performs better in terms of revenue?
-
----
-
-# 🧹 Data Cleaning
-
-The dataset is cleaned automatically using Python.
-
-Cleaning steps include:
-
-- Removing duplicate records
-- Handling missing values
-- Standardizing text values
-- Converting date columns
-- Correcting numeric data types
-- Removing inconsistent values where applicable
-
-The original dataset is never modified.
-
-The cleaned dataset is saved in:
-
-```text
-data/processed/cleaned_hotel_bookings.csv
-```
-
----
-
-# ⚡ Feature Engineering
-
-Additional analytical features are created whenever possible, including:
-
-- Stay Length
-- Booking Month
-- Booking Year
-- Booking Weekday
-- Weekend Booking Indicator
-- Revenue
-- Advance Booking Days
-- Revenue Lost (where applicable)
-
----
-
-# 🗄️ SQL Analysis
-
-The project also contains beginner-friendly SQL queries for:
-
-- Revenue Analysis
-- Monthly Bookings
-- Revenue by Hotel
-- Top Performing Hotels
-- Cancellation Analysis
-- Average Room Price
-- Occupancy Analysis
-
-SQL file:
-
-```text
-sql/analysis_queries.sql
-```
-
----
-
-# 📊 Power BI
-
-The cleaned dataset is prepared for creating an interactive Power BI dashboard.
-
-The project includes a dashboard planning document:
-
-```text
-dashboard/power_bi_dashboard_plan.md
-```
-
-Recommended dashboard pages:
-
-- Executive Dashboard
-- Revenue Dashboard
-- Occupancy Dashboard
-
----
-
-# 🚀 How to Run the Project
-
-## 1️⃣ Install Dependencies
+### 1. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 2️⃣ Run the Streamlit Dashboard (Recommended)
+### 2. Run the Dashboard
 
 ```bash
 streamlit run app.py
 ```
 
-Open the URL shown in the terminal (usually http://localhost:8501), upload your file, and explore!
+Open the URL shown in the terminal (usually http://localhost:8501).
 
-**Supported file formats:**
+### Supported File Formats
 
 | Format | Extension | Notes |
 |--------|-----------|-------|
@@ -316,64 +156,40 @@ Open the URL shown in the terminal (usually http://localhost:8501), upload your 
 | TSV | `.tsv` | Tab-separated values |
 | Google Sheets | `.csv` / `.xlsx` | Export via File → Download, then upload |
 
-> 📱 **Mobile friendly** — works on phone browsers too!
+---
+
+## 🛠️ Technologies Used
+
+| Tool | Purpose |
+|------|---------|
+| Python 3.x | Core language |
+| Pandas | Data cleaning & manipulation |
+| NumPy | Numerical operations |
+| Streamlit | Interactive web dashboard |
+| Plotly | Interactive charts |
+| openpyxl | XLSX file support |
+| xlrd | XLS file support |
 
 ---
 
-## 3️⃣ Run Using Python (CLI)
+## 🔮 Future Improvements
 
-```bash
-python src/main.py
-```
-
----
-
-## 4️⃣ Run Using Jupyter Notebook
-
-```bash
-jupyter notebook notebooks/Hotel_Booking_Analysis.ipynb
-```
-
-or open the notebook directly in VS Code and click **Run All**.
+- Power BI Dashboard integration
+- Revenue forecasting with ML
+- Customer segmentation
+- Dynamic pricing analysis
+- Geographic booking analysis
 
 ---
 
-# 📁 Dataset
-
-Place the original dataset inside:
-
-```text
-data/raw/
-```
-
-The cleaned dataset will automatically be generated inside:
-
-```text
-data/processed/
-```
-
----
-
-# 🔮 Future Improvements
-
-- Interactive Power BI Dashboard
-- Revenue Forecasting
-- Customer Segmentation
-- Dynamic Pricing Analysis
-- Booking Prediction using Machine Learning
-- Geographic Booking Analysis
-
----
-
-# 👨‍💻 Author
+## 👨‍💻 Author
 
 **Durgesh Kushwaha**
 
 B.Tech – Artificial Intelligence & Data Science
 
-Data Analytics | Python | SQL | Power BI
+📧 durgeshcgc@gmail.com
 
 ---
 
-## ⭐ If you found this project useful, consider giving it a Star.
-# hotel-booking-analytics
+## ⭐ If you found this project useful, consider giving it a Star!
